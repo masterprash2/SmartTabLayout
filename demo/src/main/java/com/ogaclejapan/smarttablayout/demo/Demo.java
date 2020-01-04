@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.ogaclejapan.smarttablayout.SmartTabLayout;
+import com.ogaclejapan.smarttablayout.TabsAdapter;
 
 import androidx.viewpager.widget.PagerAdapter;
 
@@ -52,7 +53,7 @@ public enum Demo {
 
       layout.setCustomTabView(new SmartTabLayout.TabProvider() {
         @Override
-        public View createTabView(ViewGroup container, int position, PagerAdapter adapter) {
+        public View createTabView(ViewGroup container, int position, TabsAdapter adapter) {
           ImageView icon = (ImageView) inflater.inflate(R.layout.custom_tab_icon1, container,
               false);
           switch (position) {
@@ -97,7 +98,7 @@ public enum Demo {
 
       layout.setCustomTabView(new SmartTabLayout.TabProvider() {
         @Override
-        public View createTabView(ViewGroup container, int position, PagerAdapter adapter) {
+        public View createTabView(ViewGroup container, int position, TabsAdapter adapter) {
           ImageView icon = (ImageView) inflater.inflate(R.layout.custom_tab_icon2, container,
               false);
           switch (position) {

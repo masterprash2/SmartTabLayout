@@ -10,6 +10,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.ogaclejapan.smarttablayout.SmartTabLayout;
+import com.ogaclejapan.smarttablayout.TabsAdapter;
+import com.ogaclejapan.smarttablayout.TabsCallback;
+import com.ogaclejapan.smarttablayout.ViewPagerTabCallbacks;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItem;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItemAdapter;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItems;
@@ -62,12 +65,17 @@ public class DemoTabWithNotificationMarkActivity extends AppCompatActivity imple
         getSupportFragmentManager(), pages);
 
     viewPager.setAdapter(adapter);
-    viewPagerTab.setViewPager(viewPager);
+    viewPagerTab.setTabsCallback(new ViewPagerTabCallbacks(viewPager));
 
-    viewPagerTab.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+    viewPagerTab.setOnTabChangeListener(new TabsCallback.OnTabContainerChangeListener() {
       @Override
-      public void onPageSelected(int position) {
-        super.onPageSelected(position);
+      public void onContainerScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+      @Override
+      public void onContainerScrollStateChanged(TabsCallback.State state) { }
+
+      @Override
+      public void onContainerSelected(int position) {
         View tab = viewPagerTab.getTabAt(position);
         View mark = tab.findViewById(R.id.custom_tab_notification_mark);
         mark.setVisibility(View.GONE);
@@ -87,7 +95,7 @@ public class DemoTabWithNotificationMarkActivity extends AppCompatActivity imple
   }
 
   @Override
-  public View createTabView(ViewGroup container, int position, PagerAdapter adapter) {
+  public View createTabView(ViewGroup container, int position, TabsAdapter adapter) {
     LayoutInflater inflater = LayoutInflater.from(container.getContext());
     Resources res = container.getContext().getResources();
     View tab = inflater.inflate(R.layout.custom_tab_icon_and_notification_mark, container, false);

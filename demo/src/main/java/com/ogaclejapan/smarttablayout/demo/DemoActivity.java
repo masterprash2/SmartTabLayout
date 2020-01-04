@@ -7,6 +7,9 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.ogaclejapan.smarttablayout.SmartTabLayout;
+import com.ogaclejapan.smarttablayout.TabsAdapter;
+import com.ogaclejapan.smarttablayout.TabsCallback;
+import com.ogaclejapan.smarttablayout.ViewPagerTabCallbacks;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItem;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItemAdapter;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItems;
@@ -40,7 +43,7 @@ public class DemoActivity extends AppCompatActivity {
     ViewGroup tab = (ViewGroup) findViewById(R.id.tab);
     tab.addView(LayoutInflater.from(this).inflate(demo.layoutResId, tab, false));
 
-    ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+    final ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
     SmartTabLayout viewPagerTab = (SmartTabLayout) findViewById(R.id.viewpagertab);
     demo.setup(viewPagerTab);
 
@@ -53,7 +56,7 @@ public class DemoActivity extends AppCompatActivity {
         getSupportFragmentManager(), pages);
 
     viewPager.setAdapter(adapter);
-    viewPagerTab.setViewPager(viewPager);
+    viewPagerTab.setTabsCallback(new ViewPagerTabCallbacks(viewPager));
 
   }
 

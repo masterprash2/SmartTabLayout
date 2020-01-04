@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.ogaclejapan.smarttablayout.SmartTabLayout;
+import com.ogaclejapan.smarttablayout.ViewPagerTabCallbacks;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItem;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItemAdapter;
 import com.ogaclejapan.smarttablayout.utils.v4.FragmentPagerItems;
@@ -53,7 +54,7 @@ public class DemoRtlActivity extends AppCompatActivity {
         getSupportFragmentManager(), pages);
 
     viewPager.setAdapter(adapter);
-    viewPagerTab.setViewPager(viewPager);
+    viewPagerTab.setTabsCallback(new ViewPagerTabCallbacks(viewPager));
 
   }
 

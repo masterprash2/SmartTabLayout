@@ -33,17 +33,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.core.view.ViewCompat;
-import androidx.viewpager.widget.PagerAdapter;
-import androidx.viewpager.widget.ViewPager;
 
 /**
- * To be used with ViewPager to provide a tab indicator component which give constant feedback as
+ * To be used with TabsCallback to provide a tab indicator component which give constant feedback as
  * to
  * the user's scroll progress.
  * <p>
  * To use the component, simply add it to your view hierarchy. Then in your
  * {@link android.app.Activity} or {@link androidx.fragment.app.Fragment} call
- * {@link #setViewPager(ViewPager)} providing it the ViewPager this
+ * {@link #setTabsCallback(TabsCallback)} providing it the TabsCallback this
  * layout
  * is being used for.
  * <p>
@@ -79,13 +77,14 @@ public class SmartTabLayout extends HorizontalScrollView {
   private float tabViewTextSize;
   private int tabViewTextHorizontalPadding;
   private int tabViewTextMinWidth;
-  private ViewPager viewPager;
-  private ViewPager.OnPageChangeListener viewPagerPageChangeListener;
   private OnScrollChangeListener onScrollChangeListener;
   private TabProvider tabProvider;
   private InternalTabClickListener internalTabClickListener;
   private OnTabClickListener onTabClickListener;
   private boolean distributeEvenly;
+
+  private TabsCallback tabsCallback;
+  private TabsCallback.OnTabContainerChangeListener tabChangeListener;
 
   public SmartTabLayout(Context context) {
     this(context, null);
@@ -199,8 +198,8 @@ public class SmartTabLayout extends HorizontalScrollView {
   protected void onLayout(boolean changed, int l, int t, int r, int b) {
     super.onLayout(changed, l, t, r, b);
     // Ensure first scroll
-    if (changed && viewPager != null) {
-      scrollToTab(viewPager.getCurrentItem(), 0);
+    if (changed && tabsCallback != null) {
+      scrollToTab(tabsCallback.getCurrentIndex(), 0);
     }
   }
 
@@ -226,7 +225,7 @@ public class SmartTabLayout extends HorizontalScrollView {
 
   /**
    * Set the color used for styling the tab text. This will need to be called prior to calling
-   * {@link #setViewPager(ViewPager)} otherwise it will not get set
+   * {@link #setTabsCallback(TabsCallback)} otherwise it will not get set
    *
    * @param color to use for tab text
    */
@@ -236,7 +235,7 @@ public class SmartTabLayout extends HorizontalScrollView {
 
   /**
    * Sets the colors used for styling the tab text. This will need to be called prior to calling
-   * {@link #setViewPager(ViewPager)} otherwise it will not get set
+   * {@link #setTabsCallback(TabsCallback)} otherwise it will not get set
    *
    * @param colors ColorStateList to use for tab text
    */
@@ -268,14 +267,13 @@ public class SmartTabLayout extends HorizontalScrollView {
   }
 
   /**
-   * Set the {@link ViewPager.OnPageChangeListener}. When using {@link SmartTabLayout} you are
-   * required to set any {@link ViewPager.OnPageChangeListener} through this method. This is so
+   * Set the {@link TabsCallback.OnTabContainerChangeListener}. When using {@link SmartTabLayout} you are
+   * required to set any {@link TabsCallback.OnTabContainerChangeListener} through this method. This is so
    * that the layout can update it's scroll position correctly.
    *
-   * @see ViewPager#setOnPageChangeListener(ViewPager.OnPageChangeListener)
    */
-  public void setOnPageChangeListener(ViewPager.OnPageChangeListener listener) {
-    viewPagerPageChangeListener = listener;
+  public void setOnTabChangeListener(TabsCallback.OnTabContainerChangeListener listener) {
+    tabChangeListener = listener;
   }
 
   /**
@@ -319,12 +317,12 @@ public class SmartTabLayout extends HorizontalScrollView {
    * Sets the associated view pager. Note that the assumption here is that the pager content
    * (number of tabs and tab titles) does not change after this call has been made.
    */
-  public void setViewPager(ViewPager viewPager) {
+  public void setTabsCallback(TabsCallback tabsCallback) {
     tabStrip.removeAllViews();
 
-    this.viewPager = viewPager;
-    if (viewPager != null && viewPager.getAdapter() != null) {
-      viewPager.addOnPageChangeListener(new InternalViewPagerListener());
+    this.tabsCallback = tabsCallback;
+    if (tabsCallback != null && tabsCallback.getAdapter() != null) {
+      tabsCallback.addOnTabChangeListener(new InternalTabsCallbackListenerContainer());
       populateTabStrip();
     }
   }
@@ -382,7 +380,7 @@ public class SmartTabLayout extends HorizontalScrollView {
   }
 
   private void populateTabStrip() {
-    final PagerAdapter adapter = viewPager.getAdapter();
+    final TabsAdapter adapter = tabsCallback.getAdapter();
 
     for (int i = 0; i < adapter.getCount(); i++) {
 
@@ -406,7 +404,7 @@ public class SmartTabLayout extends HorizontalScrollView {
 
       tabStrip.addView(tabView);
 
-      if (i == viewPager.getCurrentItem()) {
+      if (i == tabsCallback.getCurrentIndex()) {
         tabView.setSelected(true);
       }
 
@@ -546,7 +544,7 @@ public class SmartTabLayout extends HorizontalScrollView {
     /**
      * @return Return the View of {@code position} for the Tabs
      */
-    View createTabView(ViewGroup container, int position, PagerAdapter adapter);
+    View createTabView(ViewGroup container, int position, TabsAdapter adapter);
 
   }
 
@@ -563,7 +561,7 @@ public class SmartTabLayout extends HorizontalScrollView {
     }
 
     @Override
-    public View createTabView(ViewGroup container, int position, PagerAdapter adapter) {
+    public View createTabView(ViewGroup container, int position, TabsAdapter adapter) {
       View tabView = null;
       TextView tabTitleView = null;
 
@@ -588,12 +586,12 @@ public class SmartTabLayout extends HorizontalScrollView {
 
   }
 
-  private class InternalViewPagerListener implements ViewPager.OnPageChangeListener {
+  private class InternalTabsCallbackListenerContainer implements TabsCallback.OnTabContainerChangeListener {
 
-    private int scrollState;
+    private TabsCallback.State scrollState;
 
     @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+    public void onContainerScrolled(int position, float positionOffset, int positionOffsetPixels) {
       int tabStripChildCount = tabStrip.getChildCount();
       if ((tabStripChildCount == 0) || (position < 0) || (position >= tabStripChildCount)) {
         return;
@@ -603,23 +601,23 @@ public class SmartTabLayout extends HorizontalScrollView {
 
       scrollToTab(position, positionOffset);
 
-      if (viewPagerPageChangeListener != null) {
-        viewPagerPageChangeListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
+      if (tabChangeListener != null) {
+        tabChangeListener.onContainerScrolled(position, positionOffset, positionOffsetPixels);
       }
     }
 
     @Override
-    public void onPageScrollStateChanged(int state) {
+    public void onContainerScrollStateChanged(TabsCallback.State state) {
       scrollState = state;
 
-      if (viewPagerPageChangeListener != null) {
-        viewPagerPageChangeListener.onPageScrollStateChanged(state);
+      if (tabChangeListener != null) {
+        tabChangeListener.onContainerScrollStateChanged(state);
       }
     }
 
     @Override
-    public void onPageSelected(int position) {
-      if (scrollState == ViewPager.SCROLL_STATE_IDLE) {
+    public void onContainerSelected(int position) {
+      if (scrollState == TabsCallback.State.SCROLL_STATE_IDLE) {
         tabStrip.onViewPagerPageChanged(position, 0f);
         scrollToTab(position, 0);
       }
@@ -628,8 +626,8 @@ public class SmartTabLayout extends HorizontalScrollView {
         tabStrip.getChildAt(i).setSelected(position == i);
       }
 
-      if (viewPagerPageChangeListener != null) {
-        viewPagerPageChangeListener.onPageSelected(position);
+      if (tabChangeListener != null) {
+        tabChangeListener.onContainerSelected(position);
       }
     }
 
@@ -643,7 +641,7 @@ public class SmartTabLayout extends HorizontalScrollView {
           if (onTabClickListener != null) {
             onTabClickListener.onTabClicked(i);
           }
-          viewPager.setCurrentItem(i);
+          tabsCallback.setCurrentIndex(i);
           return;
         }
       }
